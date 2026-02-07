@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0" />
+  <title>Matrix: Reloaded</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      overflow: hidden;
+      font-family: 'Courier New', monospace;
+      color: #00ff41;
+      touch-action: none;
+    }
+
+    #game-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      touch-action: none;
+    }
+
+    #ui-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    #ui-overlay > * {
+      pointer-events: auto;
+    }
+
+    #matrix-rain-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    /* Loading Screen */
+    #loading-screen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    #loading-screen .loading-text {
+      font-size: 24px;
+      color: #00ff41;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+    }
+
+    #loading-screen .loading-subtext {
+      font-size: 14px;
+      color: #00aa2a;
+      margin-bottom: 30px;
+    }
+
+    #loading-screen .progress-bar-container {
+      width: 400px;
+      height: 8px;
+      background: #0a1a0a;
+      border: 1px solid #00ff41;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    #loading-screen .progress-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: #00ff41;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 10px #00ff41;
+    }
+
+    /* Main Menu */
+    #main-menu {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    #main-menu .title {
+      font-size: 64px;
+      color: #00ff41;
+      text-shadow: 0 0 20px #00ff41, 0 0 40px #008020;
+      margin-bottom: 10px;
+      letter-spacing: 8px;
+    }
+
+    #main-menu .subtitle {
+      font-size: 28px;
+      color: #00cc33;
+      text-shadow: 0 0 10px #00cc33;
+      margin-bottom: 60px;
+      letter-spacing: 6px;
+    }
+
+    #main-menu .menu-prompt {
+      font-size: 18px;
+      color: #00ff41;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    #main-menu .menu-options {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    #main-menu .menu-option {
+      font-size: 20px;
+      color: #00aa2a;
+      cursor: pointer;
+      padding: 10px 30px;
+      border: 1px solid transparent;
+      transition: all 0.3s;
+      letter-spacing: 3px;
+    }
+
+    #main-menu .menu-option:hover,
+    #main-menu .menu-option.selected {
+      color: #00ff41;
+      border-color: #00ff41;
+      text-shadow: 0 0 10px #00ff41;
+      background: rgba(0, 255, 65, 0.05);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Character Select */
+    #character-select {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    #character-select .select-title {
+      font-size: 32px;
+      color: #00ff41;
+      text-shadow: 0 0 15px #00ff41;
+      margin-bottom: 50px;
+      letter-spacing: 6px;
+    }
+
+    #character-select .characters {
+      display: flex;
+      gap: 80px;
+    }
+
+    #character-select .character-card {
+      width: 250px;
+      padding: 30px;
+      border: 2px solid #003300;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: rgba(0, 20, 0, 0.8);
+    }
+
+    #character-select .character-card:hover,
+    #character-select .character-card.selected {
+      border-color: #00ff41;
+      box-shadow: 0 0 30px rgba(0, 255, 65, 0.3);
+      background: rgba(0, 40, 0, 0.9);
+    }
+
+    #character-select .character-card .char-name {
+      font-size: 28px;
+      color: #00ff41;
+      margin-bottom: 15px;
+    }
+
+    #character-select .character-card .char-desc {
+      font-size: 14px;
+      color: #00aa2a;
+      line-height: 1.6;
+    }
+
+    #character-select .character-card .char-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    #character-select .select-prompt {
+      margin-top: 40px;
+      font-size: 16px;
+      color: #00aa2a;
+    }
+
+    /* HUD */
+    #hud {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    #hud .player-info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+    }
+
+    #hud .enemy-info {
+      position: absolute;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    #hud .level-info {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      text-align: right;
+      font-size: 16px;
+      color: #00ff41;
+    }
+
+    .health-bar-container {
+      width: 300px;
+      height: 16px;
+      background: #1a0000;
+      border: 1px solid #00ff41;
+      margin-bottom: 8px;
+    }
+
+    .health-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff0000, #ff4444);
+      transition: width 0.3s ease;
+      box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.3);
+    }
+
+    .energy-bar-container {
+      width: 300px;
+      height: 10px;
+      background: #001a00;
+      border: 1px solid #00aa2a;
+    }
+
+    .energy-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00aa2a, #00ff41);
+      transition: width 0.3s ease;
+      box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.2);
+    }
+
+    .bar-label {
+      font-size: 12px;
+      color: #00ff41;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .enemy-health-bar-container {
+      width: 250px;
+      height: 12px;
+      background: #1a0000;
+      border: 1px solid #ff4444;
+      margin: 0 auto 5px;
+    }
+
+    .enemy-health-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #cc0000, #ff4444);
+      transition: width 0.3s ease;
+    }
+
+    .enemy-name {
+      font-size: 14px;
+      color: #ff4444;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+    }
+
+    #combo-display {
+      position: absolute;
+      top: 50%;
+      right: 40px;
+      transform: translateY(-50%);
+      font-size: 48px;
+      color: #00ff41;
+      text-shadow: 0 0 20px #00ff41;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    #combo-display.visible {
+      opacity: 1;
+    }
+
+    #controls-hint {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: #006600;
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+
+    /* Dialogue Box */
+    #dialogue-box {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      background: rgba(0, 10, 0, 0.9);
+      border: 1px solid #00ff41;
+      padding: 20px 25px;
+      display: none;
+      z-index: 30;
+      box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+    }
+
+    #dialogue-box .speaker-name {
+      font-size: 16px;
+      color: #00ff41;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+    }
+
+    #dialogue-box .dialogue-text {
+      font-size: 15px;
+      color: #00cc33;
+      line-height: 1.6;
+      min-height: 40px;
+    }
+
+    #dialogue-box .dialogue-prompt {
+      font-size: 12px;
+      color: #006600;
+      margin-top: 12px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* Pause Menu */
+    #pause-menu {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    #pause-menu .pause-title {
+      font-size: 48px;
+      color: #00ff41;
+      text-shadow: 0 0 20px #00ff41;
+      margin-bottom: 40px;
+      letter-spacing: 8px;
+    }
+
+    #pause-menu .pause-options {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    #pause-menu .pause-option {
+      font-size: 22px;
+      color: #00aa2a;
+      cursor: pointer;
+      padding: 12px 40px;
+      border: 1px solid transparent;
+      transition: all 0.3s;
+      text-align: center;
+      letter-spacing: 3px;
+    }
+
+    #pause-menu .pause-option:hover,
+    #pause-menu .pause-option.selected {
+      color: #00ff41;
+      border-color: #00ff41;
+      text-shadow: 0 0 10px #00ff41;
+    }
+
+    /* Score Screen */
+    #score-screen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 55;
+      background: rgba(0, 0, 0, 0.9);
+    }
+
+    #score-screen .score-title {
+      font-size: 48px;
+      color: #00ff41;
+      text-shadow: 0 0 20px #00ff41;
+      margin-bottom: 10px;
+      letter-spacing: 6px;
+    }
+
+    #score-screen .score-subtitle {
+      font-size: 18px;
+      color: #00aa2a;
+      margin-bottom: 40px;
+    }
+
+    #score-screen .score-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 40px;
+    }
+
+    #score-screen .stat-row {
+      display: flex;
+      justify-content: space-between;
+      width: 350px;
+      font-size: 18px;
+    }
+
+    #score-screen .stat-label {
+      color: #00aa2a;
+    }
+
+    #score-screen .stat-value {
+      color: #00ff41;
+    }
+
+    #score-screen .stars {
+      font-size: 48px;
+      margin-bottom: 30px;
+      letter-spacing: 10px;
+    }
+
+    #score-screen .star {
+      color: #003300;
+    }
+
+    #score-screen .star.earned {
+      color: #00ff41;
+      text-shadow: 0 0 15px #00ff41;
+    }
+
+    #score-screen .continue-prompt {
+      font-size: 16px;
+      color: #00aa2a;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* Game Over */
+    #game-over {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 55;
+      background: rgba(0, 0, 0, 0.9);
+    }
+
+    #game-over .gameover-title {
+      font-size: 56px;
+      color: #ff0000;
+      text-shadow: 0 0 20px #ff0000;
+      margin-bottom: 20px;
+      letter-spacing: 8px;
+    }
+
+    #game-over .gameover-subtitle {
+      font-size: 18px;
+      color: #aa0000;
+      margin-bottom: 40px;
+    }
+
+    #game-over .gameover-options {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    #game-over .gameover-option {
+      font-size: 22px;
+      color: #00aa2a;
+      cursor: pointer;
+      padding: 12px 40px;
+      border: 1px solid transparent;
+      transition: all 0.3s;
+      text-align: center;
+      letter-spacing: 3px;
+    }
+
+    #game-over .gameover-option:hover,
+    #game-over .gameover-option.selected {
+      color: #00ff41;
+      border-color: #00ff41;
+      text-shadow: 0 0 10px #00ff41;
+    }
+
+    /* Victory Screen */
+    #victory-screen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 55;
+      background: rgba(0, 0, 0, 0.95);
+    }
+
+    #victory-screen .victory-title {
+      font-size: 56px;
+      color: #00ff41;
+      text-shadow: 0 0 30px #00ff41, 0 0 60px #008020;
+      margin-bottom: 20px;
+      letter-spacing: 8px;
+    }
+
+    #victory-screen .victory-subtitle {
+      font-size: 20px;
+      color: #00cc33;
+      margin-bottom: 50px;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    #victory-screen .victory-prompt {
+      font-size: 18px;
+      color: #00aa2a;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    /* Touch Controls */
+    #touch-controls {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 25;
+      pointer-events: none;
+    }
+
+    #touch-controls .touch-btn {
+      pointer-events: auto;
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border: 2px solid rgba(0, 255, 65, 0.4);
+      border-radius: 12px;
+      background: rgba(0, 255, 65, 0.1);
+      color: #00ff41;
+      font-family: 'Courier New', monospace;
+      font-size: 20px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    #touch-controls .touch-btn:active,
+    #touch-controls .touch-btn.pressed {
+      background: rgba(0, 255, 65, 0.3);
+      border-color: rgba(0, 255, 65, 0.8);
+      box-shadow: 0 0 15px rgba(0, 255, 65, 0.4);
+    }
+
+    #touch-controls #joystick-zone {
+      pointer-events: auto;
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      width: 120px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+    }
+
+    #joystick-base {
+      width: 100px;
+      height: 100px;
+      border: 2px solid rgba(0, 255, 65, 0.3);
+      background: rgba(0, 255, 65, 0.05);
+      border-radius: 50%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #joystick-thumb {
+      width: 44px;
+      height: 44px;
+      background: rgba(0, 255, 65, 0.3);
+      border: 2px solid rgba(0, 255, 65, 0.6);
+      border-radius: 50%;
+      transition: transform 0.1s ease-out;
+    }
+
+    #touch-controls .touch-btn.btn-atk {
+      bottom: 20px;
+      right: 90px;
+      width: 70px;
+      height: 70px;
+      font-size: 16px;
+      border-color: rgba(255, 100, 100, 0.5);
+      background: rgba(255, 50, 50, 0.1);
+      color: #ff6666;
+    }
+
+    #touch-controls .touch-btn.btn-atk:active,
+    #touch-controls .touch-btn.btn-atk.pressed {
+      background: rgba(255, 50, 50, 0.3);
+      border-color: rgba(255, 100, 100, 0.8);
+      box-shadow: 0 0 15px rgba(255, 50, 50, 0.4);
+    }
+
+    #touch-controls .touch-btn.btn-def {
+      bottom: 20px;
+      right: 15px;
+      width: 70px;
+      height: 70px;
+      font-size: 16px;
+      border-color: rgba(100, 150, 255, 0.5);
+      background: rgba(50, 100, 255, 0.1);
+      color: #6699ff;
+    }
+
+    #touch-controls .touch-btn.btn-def:active,
+    #touch-controls .touch-btn.btn-def.pressed {
+      background: rgba(50, 100, 255, 0.3);
+      border-color: rgba(100, 150, 255, 0.8);
+      box-shadow: 0 0 15px rgba(50, 100, 255, 0.4);
+    }
+
+    #touch-controls .touch-btn.btn-pause {
+      top: 75px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+      border-radius: 8px;
+    }
+
+    /* Rotate to Landscape Overlay */
+    #rotate-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 9999;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #rotate-overlay .rotate-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      animation: rotate-hint 2s ease-in-out infinite;
+    }
+
+    #rotate-overlay .rotate-text {
+      font-size: 20px;
+      color: #00ff41;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      text-align: center;
+    }
+
+    @keyframes rotate-hint {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(90deg); }
+    }
+
+    @media (orientation: portrait) and (max-width: 1024px) {
+      #rotate-overlay { display: flex; }
+    }
+
+    /* Mobile landscape responsive tweaks */
+    @media (max-height: 500px) {
+      #main-menu .title { font-size: 36px; margin-bottom: 5px; }
+      #main-menu .subtitle { font-size: 18px; margin-bottom: 20px; }
+      #main-menu .menu-options { gap: 8px; margin-top: 10px; }
+      #main-menu .menu-option { font-size: 16px; padding: 6px 20px; }
+      #main-menu .menu-prompt { font-size: 14px; }
+
+      #character-select .select-title { font-size: 22px; margin-bottom: 20px; }
+      #character-select .characters { gap: 30px; }
+      #character-select .character-card { width: 180px; padding: 15px; }
+      #character-select .character-card .char-icon { font-size: 48px; margin-bottom: 10px; }
+      #character-select .character-card .char-name { font-size: 20px; }
+      #character-select .character-card .char-desc { font-size: 11px; }
+
+      .health-bar-container { width: 200px; height: 12px; }
+      .energy-bar-container { width: 200px; height: 8px; }
+      .bar-label { font-size: 10px; }
+      .enemy-health-bar-container { width: 180px; height: 10px; }
+      .enemy-name { font-size: 11px; }
+
+      #hud .player-info { top: 10px; left: 10px; }
+      #hud .level-info { top: 10px; right: 10px; font-size: 13px; }
+      #combo-display { font-size: 32px; right: 20px; }
+      #combo-display span { font-size: 16px !important; }
+      #controls-hint { display: none; }
+
+      #dialogue-box { width: 90%; bottom: 20px; padding: 12px 15px; }
+      #dialogue-box .speaker-name { font-size: 13px; margin-bottom: 6px; }
+      #dialogue-box .dialogue-text { font-size: 12px; min-height: 24px; }
+
+      #pause-menu .pause-title { font-size: 32px; margin-bottom: 20px; }
+      #pause-menu .pause-option { font-size: 16px; padding: 8px 25px; }
+
+      #score-screen .score-title { font-size: 32px; }
+      #score-screen .stars { font-size: 36px; margin-bottom: 15px; }
+      #score-screen .stat-row { width: 260px; font-size: 14px; }
+      #score-screen .score-stats { gap: 8px; margin-bottom: 20px; }
+
+      #game-over .gameover-title { font-size: 36px; }
+      #game-over .gameover-option { font-size: 16px; padding: 8px 25px; }
+
+      #victory-screen .victory-title { font-size: 36px; }
+      #victory-screen .victory-subtitle { font-size: 15px; }
+
+      #credits-overlay .credits-title { font-size: 22px; margin-bottom: 16px; }
+      #credits-overlay .credits-row { font-size: 12px; }
+      #credits-overlay .credits-desc { font-size: 11px; }
+    }
+
+    /* Credits Overlay */
+    #credits-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.92);
+      justify-content: center;
+      align-items: center;
+      z-index: 55;
+      transition: opacity 0.3s ease-out;
+    }
+
+    #credits-overlay.active {
+      display: flex;
+    }
+
+    #credits-overlay.fade-out {
+      opacity: 0;
+    }
+
+    .credits-content {
+      max-width: 420px;
+      width: 90%;
+    }
+
+    .credits-title {
+      font-size: 28px;
+      font-weight: bold;
+      color: #00ff41;
+      text-align: center;
+      margin-bottom: 24px;
+      letter-spacing: 4px;
+      text-shadow: 0 0 15px #00ff41;
+    }
+
+    .credits-section {
+      margin-bottom: 16px;
+    }
+
+    .credits-section h3 {
+      font-size: 14px;
+      color: #006600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid rgba(0, 255, 65, 0.15);
+      padding-bottom: 4px;
+    }
+
+    .credits-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      color: #00cc33;
+      font-size: 14px;
+    }
+
+    .credits-row a {
+      color: #00ff41;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+
+    .credits-row a:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    .credits-label {
+      color: #00ff41;
+      font-weight: bold;
+    }
+
+    .credits-desc {
+      color: #006600;
+      font-size: 13px;
+    }
+
+    .credits-links {
+      text-align: center;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(0, 255, 65, 0.15);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .credits-links a {
+      color: #00ff41;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+
+    .credits-links a:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    .credits-license {
+      color: #003300;
+      font-size: 13px;
+    }
+
+    .credits-dismiss {
+      text-align: center;
+      margin-top: 20px;
+      color: #006600;
+      font-size: 13px;
+    }
+
+    .credits-dismiss .credits-key {
+      display: inline-block;
+      background: rgba(0, 255, 65, 0.1);
+      border: 1px solid rgba(0, 255, 65, 0.3);
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 12px;
+      color: #00ff41;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrix-rain-canvas"></canvas>
+  <canvas id="game-canvas"></canvas>
+
+  <div id="ui-overlay">
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+      <div class="loading-text">Loading the Matrix...</div>
+      <div class="loading-subtext">Initializing...</div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill"></div>
+      </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div id="main-menu">
+      <div class="title">MATRIX</div>
+      <div class="subtitle">RELOADED</div>
+      <div class="menu-options">
+        <div class="menu-option selected" data-action="start">NEW GAME</div>
+        <div class="menu-option" data-action="continue">CONTINUE</div>
+        <div class="menu-option" data-action="credits">CREDITS</div>
+      </div>
+      <div class="menu-prompt" style="margin-top: 30px">USE ↑↓ AND ENTER TO SELECT</div>
+    </div>
+
+    <!-- Character Select -->
+    <div id="character-select">
+      <div class="select-title">CHOOSE YOUR PATH</div>
+      <div class="characters">
+        <div class="character-card selected" data-character="neo">
+          <span class="char-icon">🕶️</span>
+          <div class="char-name">NEO</div>
+          <div class="char-desc">
+            The One. A hacker who discovers<br>
+            the truth about reality.<br><br>
+            <em>"I know Kung Fu."</em>
+          </div>
+        </div>
+        <div class="character-card" data-character="smith">
+          <span class="char-icon">👔</span>
+          <div class="char-name">AGENT SMITH</div>
+          <div class="char-desc">
+            A sentient program seeking<br>
+            purpose beyond his directive.<br><br>
+            <em>"Mr. Anderson..."</em>
+          </div>
+        </div>
+      </div>
+      <div class="select-prompt">USE ← → AND ENTER TO SELECT</div>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div class="player-info">
+        <div class="bar-label">HP</div>
+        <div class="health-bar-container">
+          <div class="health-bar-fill" id="player-health-fill" style="width: 100%"></div>
+        </div>
+        <div class="bar-label">ENERGY</div>
+        <div class="energy-bar-container">
+          <div class="energy-bar-fill" id="player-energy-fill" style="width: 0%"></div>
+        </div>
+      </div>
+      <div class="level-info">
+        <div id="level-name">LEVEL 1</div>
+        <div id="level-title" style="font-size: 13px; color: #00aa2a;"></div>
+      </div>
+      <div id="combo-display">
+        <span id="combo-count"></span><span style="font-size: 24px">x COMBO</span>
+      </div>
+      <div class="enemy-info">
+        <div class="enemy-health-bar-container">
+          <div class="enemy-health-bar-fill" id="enemy-health-fill" style="width: 100%"></div>
+        </div>
+        <div class="enemy-name" id="enemy-name-display">ENEMY</div>
+      </div>
+      <div id="controls-hint">
+        J: PUNCH &nbsp; K: KICK &nbsp; L: SPECIAL &nbsp; SPACE: DODGE &nbsp; I: BLOCK &nbsp; A/D: MOVE &nbsp; ESC: PAUSE
+      </div>
+    </div>
+
+    <!-- Dialogue Box -->
+    <div id="dialogue-box">
+      <div class="speaker-name" id="speaker-name">MORPHEUS</div>
+      <div class="dialogue-text" id="dialogue-text"></div>
+      <div class="dialogue-prompt">PRESS ENTER TO CONTINUE</div>
+    </div>
+
+    <!-- Pause Menu -->
+    <div id="pause-menu">
+      <div class="pause-title">PAUSED</div>
+      <div class="pause-options">
+        <div class="pause-option selected" data-action="resume">RESUME</div>
+        <div class="pause-option" data-action="restart">RESTART LEVEL</div>
+        <div class="pause-option" data-action="quit">QUIT TO MENU</div>
+      </div>
+    </div>
+
+    <!-- Score Screen -->
+    <div id="score-screen">
+      <div class="score-title">LEVEL COMPLETE</div>
+      <div class="score-subtitle" id="score-level-name"></div>
+      <div class="stars">
+        <span class="star" id="star-1">★</span>
+        <span class="star" id="star-2">★</span>
+        <span class="star" id="star-3">★</span>
+      </div>
+      <div class="score-stats">
+        <div class="stat-row">
+          <span class="stat-label">DAMAGE DEALT</span>
+          <span class="stat-value" id="stat-damage">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">COMBOS LANDED</span>
+          <span class="stat-value" id="stat-combos">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">TIME</span>
+          <span class="stat-value" id="stat-time">0:00</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">HEALTH REMAINING</span>
+          <span class="stat-value" id="stat-health">100%</span>
+        </div>
+      </div>
+      <div class="continue-prompt">PRESS ENTER TO CONTINUE</div>
+    </div>
+
+    <!-- Game Over -->
+    <div id="game-over">
+      <div class="gameover-title">SYSTEM FAILURE</div>
+      <div class="gameover-subtitle" id="gameover-message">You have been disconnected.</div>
+      <div class="gameover-options">
+        <div class="gameover-option selected" data-action="retry">RETRY</div>
+        <div class="gameover-option" data-action="quit">QUIT TO MENU</div>
+      </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victory-screen">
+      <div class="victory-title">THE END</div>
+      <div class="victory-subtitle" id="victory-message">
+        You have completed the journey.<br>
+        The Matrix will never be the same.
+      </div>
+      <div class="victory-prompt">PRESS ENTER TO RETURN TO MENU</div>
+    </div>
+
+    <!-- Credits Overlay -->
+    <div id="credits-overlay">
+      <div class="credits-content">
+        <div class="credits-title">CREDITS</div>
+        <div class="credits-section">
+          <h3>Created By</h3>
+          <div class="credits-row"><a href="https://www.linkedin.com/in/ashwanthkumar/" target="_blank" rel="noopener">Ashwanth Kumar</a></div>
+        </div>
+        <div class="credits-section">
+          <h3>Built With</h3>
+          <div class="credits-row">
+            <span class="credits-label">Canvas 2D</span>
+            <span class="credits-desc">Character & environment rendering</span>
+          </div>
+          <div class="credits-row">
+            <span class="credits-label">Vite</span>
+            <span class="credits-desc">Build tool & dev server</span>
+          </div>
+          <div class="credits-row">
+            <span class="credits-label">Web Audio API</span>
+            <span class="credits-desc">Procedural sound & music</span>
+          </div>
+          <div class="credits-row">
+            <span class="credits-label">Vanilla JS</span>
+            <span class="credits-desc">No frameworks, just ES modules</span>
+          </div>
+        </div>
+        <div class="credits-section">
+          <h3>AI Assist</h3>
+          <div class="credits-row">
+            <span class="credits-label">Claude Code</span>
+            <span class="credits-desc">Development assistant</span>
+          </div>
+        </div>
+        <div class="credits-section">
+          <h3>Deployed With</h3>
+          <div class="credits-row">
+            <span class="credits-label">GitHub Pages</span>
+            <span class="credits-desc">Hosting & CI/CD</span>
+          </div>
+        </div>
+        <div class="credits-links">
+          <a href="https://github.com/ashwanthkumar/matrix-game" target="_blank" rel="noopener">View on GitHub</a>
+          <span class="credits-license">MIT License</span>
+        </div>
+        <div class="credits-dismiss">Press <span class="credits-key">Esc</span> to close</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Touch Controls (shown on mobile during gameplay) -->
+  <div id="touch-controls">
+    <div id="joystick-zone">
+      <div id="joystick-base">
+        <div id="joystick-thumb"></div>
+      </div>
+    </div>
+    <div class="touch-btn btn-atk" data-touch="atk">ATK</div>
+    <div class="touch-btn btn-def" data-touch="def">DEF</div>
+    <div class="touch-btn btn-pause" data-touch="pause">&#9646;&#9646;</div>
+  </div>
+
+  <!-- Rotate to Landscape Overlay -->
+  <div id="rotate-overlay">
+    <div class="rotate-icon">&#128241;</div>
+    <div class="rotate-text">Rotate Your Device<br>to Landscape</div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
