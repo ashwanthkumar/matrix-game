@@ -1,2 +1,13 @@
 node_modules
 dist
+.DS_Store
+
+# Generated artifacts
+screenshots/instagram/
+screenshots/whatsapp-status/
+screenshots/0[3-9]-*.png
+screenshots/1[0-2]-*.png
+screenshots/debug*.png
+screenshots/ERROR-*.png
+videos/
+public/models/
