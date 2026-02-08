@@ -13,3 +13,7 @@ Browser-based fighting game with a Matrix theme. Built with Canvas 2D, procedura
 ![Combat](screenshots/05-canvas-punch.png)
 
 ![Credits](screenshots/13-credits.png)
+
+## License
+
+[MIT](LICENSE)
